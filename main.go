@@ -90,7 +90,6 @@ func handleFile(filePath string) error {
 	return nil
 }
 
-// func ScanLines(data []byte, atEOF bool) (advance int, token []byte, err error)
 func scanYaml(filePath string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -104,11 +103,9 @@ func scanYaml(filePath string) error {
 	result := make(map[string][]string)
 	for err == nil && !isPrefix {
 		s := string(line)
-
 		if strings.Contains(s, "import_tasks") || strings.Contains(s, "include_tasks") || strings.Contains(s, "import_role") {
 			result[filePath] = append(result[filePath], s)
 		}
-
 		line, isPrefix, err = reader.ReadLine()
 	}
 
