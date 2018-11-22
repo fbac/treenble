@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -103,7 +104,8 @@ func scanYaml(filePath string) error {
 	result := make(map[string][]string)
 	for err == nil && !isPrefix {
 		s := string(line)
-		if strings.Contains(s, "import_tasks") || strings.Contains(s, "include_tasks") || strings.Contains(s, "import_role") {
+		if strings.Contains(s, "import_tasks") || strings.Contains(s, "include_tasks") || strings.Contains(s, "import_role") || strings.Contains(s, "import_playbook") {
+			// create the results map
 			result[filePath] = append(result[filePath], s)
 		}
 		line, isPrefix, err = reader.ReadLine()
@@ -111,7 +113,7 @@ func scanYaml(filePath string) error {
 
 	for f := range result {
 		if f != "" {
-			fmt.Println(f)
+			fmt.Println("α", f)
 			for i := range result[f] {
 				if i == len(result[f])-1 {
 					fmt.Printf("└── %s\n", result[f][i])
@@ -121,6 +123,25 @@ func scanYaml(filePath string) error {
 			}
 			fmt.Printf("\n")
 		}
+	}
+
+	// get childs
+	var buffer bytes.Buffer
+	for f := range result[filePath] {
+		childSplit := strings.Split(result[filePath][f], ": ")
+		childFile := childSplit[len(childSplit)-1]
+
+		// write to buffer and reset it
+		buffer.WriteString(filepath.Dir(filePath))
+		buffer.WriteString("/")
+		buffer.WriteString(childFile)
+
+		err := handleFile(buffer.String())
+		if err != nil {
+			return err
+		}
+
+		buffer.Reset()
 	}
 
 	if isPrefix {
